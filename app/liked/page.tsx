@@ -2,26 +2,44 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Song } from "@/lib/types";
-import { loadLiked, saveLiked } from "@/lib/likes";
+import { useUser } from "@/lib/useUser";
+import { getLiked, removeLike } from "@/lib/likes";
 import { spotifyUrl, appleMusicUrl } from "@/lib/links";
 
 export default function LikedPage() {
+  const user = useUser();
   const [liked, setLiked] = useState<Song[]>([]);
-  //loads saved likes when the page opens
+  const [loading, setLoading] = useState(true);
+  //loads likes once we know who's logged in
   useEffect(() => {
-    setLiked(loadLiked());
-  }, []);
-  //removes one song from the list and saves the change
+    if (user === undefined) return;
+    getLiked(user?.id ?? null)
+      .then(setLiked)
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, [user]);
+  //removes it from the screen right away then from storage
   function handleRemove(id: number) {
-    const updated = liked.filter((song) => song.id !== id);
-    setLiked(updated);
-    saveLiked(updated);
+    const before = liked;
+    setLiked(liked.filter((song) => song.id !== id));
+    removeLike(user?.id ?? null, id).catch((err) => {
+      console.error(err);
+      //deleting failed so put the list back how it was
+      setLiked(before);
+    });
   }
   return (
     <main>
       <Link href="/">Back to discovering</Link>
       <h1>Liked Songs ({liked.length})</h1>
-      {liked.length === 0 && <p>No liked songs yet, go find some!</p>}
+      {/*nudges guests to log in so they don't lose their likes*/}
+      {user === null && (
+        <p>
+          You're browsing as a guest. <Link href="/login">Log in</Link> to save these to your account.
+        </p>
+      )}
+      {loading && <p>Loading...</p>}
+      {!loading && liked.length === 0 && <p>No liked songs yet, go find some!</p>}
       <ul>
         {liked.map((song) => (
           <li key={song.id}>
@@ -29,7 +47,6 @@ export default function LikedPage() {
             <p>
               {song.title} - {song.artist}
             </p>
-            {/*target blank opens it in a new tab so they don't lose our page*/}
             <a href={spotifyUrl(song)} target="_blank" rel="noopener noreferrer">
               Open in Spotify
             </a>{" "}
