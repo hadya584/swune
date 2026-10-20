@@ -4,8 +4,11 @@ import { Song } from "@/lib/types";
 import SongCard from "@/components/song-card";
 import Link from "next/link";
 import { loadLiked, saveLiked } from "@/lib/likes";
+import { useUser } from "@/lib/useUser";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const user = useUser();
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,6 +89,15 @@ export default function Home() {
   return (
     <main>
       <h1>swune</h1>
+      {/*shows who's logged in or a link to log in*/}
+      {user ? (
+        <p>
+          Logged in as {user.email}{" "}
+          <button onClick={() => supabase.auth.signOut()}>Log out</button>
+        </p>
+      ) : (
+        <Link href="/login">Log in</Link>
+      )}
       <form onSubmit={handleSearch}>
         <input
           value={input}
