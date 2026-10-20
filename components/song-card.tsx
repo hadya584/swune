@@ -7,7 +7,7 @@ export default function SongCard({ song }: { song: Song }) {
       <h2>{song.title}</h2>
       <p>{song.artist}</p>
       <p>{song.album}</p>
-      <audio src={song.previewUrl} controls />
+      <audio src={song.previewUrl} controls autoPlay />
     </div>
   );
 }
