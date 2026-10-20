@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { Song } from "@/lib/types";
 import SongCard from "@/components/song-card";
+import Link from "next/link";
+import { loadLiked, saveLiked } from "@/lib/likes";
 
 export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -35,6 +37,10 @@ export default function Home() {
     }
     loadSongs();
   }, [query]);
+  //pulls in any songs liked before a refresh or from another page
+  useEffect(() => {
+    setLiked(loadLiked());
+  }, []);
   //runs when the form is submitted with the button or enter key
   function handleSearch(e: React.FormEvent) {
     //stops the page from reloading which is what forms do by default
@@ -49,7 +55,10 @@ export default function Home() {
     //stops here if there's no song left to like
     if (!song) return;
     if (!liked.some((s) => s.id === song.id)) {
-      setLiked([...liked, song]);
+      const updated = [...liked, song];
+      setLiked(updated);
+      //also saves it to the browser so it survives refreshes
+      saveLiked(updated);
     }
     setIndex(index + 1);
   }
@@ -103,14 +112,7 @@ export default function Home() {
         {!loading && !error && songs.length > 0 && !currentSong && (
           <p>You've gone through all these songs, search another artist!</p>
         )}
-        <h2>Liked ({liked.length})</h2>
-        <ul>
-          {liked.map((song) => (
-            <li key={song.id}>
-              {song.title} - {song.artist}
-            </li>
-          ))}
-        </ul>
+        <Link href="/liked">Liked songs ({liked.length})</Link>
     </main>
   );
 }
