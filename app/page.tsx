@@ -6,6 +6,7 @@ import SongCard from "@/components/song-card";
 import { useUser } from "@/lib/useUser";
 import { supabase } from "@/lib/supabase";
 import { getLiked, addLike } from "@/lib/likes";
+import { getPreferences } from "@/lib/preferences";
 
 export default function Home() {
   const user = useUser();
@@ -13,11 +14,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
-  const [query, setQuery] = useState("frank ocean");
+  const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const [liked, setLiked] = useState<Song[]>([]);
   useEffect(() => {
     async function loadSongs() {
+      if (!query) return;
       setLoading(true);
       setError("");
       try {
@@ -41,6 +43,24 @@ export default function Home() {
     getLiked(user?.id ?? null)
       .then(setLiked)
       .catch((err) => console.error(err));
+  }, [user]);
+  //picks the first search from their favorite artists, or a default for guests
+  useEffect(() => {
+    if (user === undefined) return;
+    //they already searched something so don't override it
+    if (query) return;
+    if (user === null) {
+      setQuery("frank ocean");
+      return;
+    }
+    getPreferences(user.id)
+      .then((prefs) => {
+        const artists = prefs?.favoriteArtists ?? [];
+        //picks one of their artists at random so it's not the same every visit
+        const pick = artists[Math.floor(Math.random() * artists.length)];
+        setQuery(pick ?? "frank ocean");
+      })
+      .catch(() => setQuery("frank ocean"));
   }, [user]);
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -85,6 +105,7 @@ export default function Home() {
         <p>
           Logged in as {user.email}{" "}
           <button onClick={() => supabase.auth.signOut()}>Log out</button>
+          <Link href="/onboarding">Edit preferences</Link>
         </p>
       )}
       {user === null && <Link href="/login">Log in to save your likes</Link>}
