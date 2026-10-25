@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-//tells any page who's logged in and updates when they log in or out
+//undefined means still checking, null means logged out, otherwise the logged in user
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined);
   useEffect(() => {
     //checks if someone was already logged in from before
     supabase.auth.getSession().then(({ data }) => {

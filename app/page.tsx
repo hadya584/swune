@@ -1,26 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Song } from "@/lib/types";
 import SongCard from "@/components/song-card";
-import Link from "next/link";
-import { loadLiked, saveLiked } from "@/lib/likes";
 import { useUser } from "@/lib/useUser";
 import { supabase } from "@/lib/supabase";
+import { getLiked, addLike } from "@/lib/likes";
 
 export default function Home() {
   const user = useUser();
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  //what's currently typed in the box
   const [input, setInput] = useState("");
-  //what we searched, only changes when button is clicked
   const [query, setQuery] = useState("frank ocean");
-  //which song in the list we're currently on
   const [index, setIndex] = useState(0);
-  //every song the user has liked so far
   const [liked, setLiked] = useState<Song[]>([]);
-  //reruns every time query changes
   useEffect(() => {
     async function loadSongs() {
       setLoading(true);
@@ -30,7 +25,6 @@ export default function Home() {
         if (!res.ok) throw new Error("request failed");
         const data: Song[] = await res.json();
         setSongs(data);
-        //new search so start back at the first song
         setIndex(0);
       } catch {
         setError("Couldn't load songs, try refreshing");
@@ -40,64 +34,60 @@ export default function Home() {
     }
     loadSongs();
   }, [query]);
-  //pulls in any songs liked before a refresh or from another page
+  //loads likes from the account or the browser once we know who's logged in
   useEffect(() => {
-    setLiked(loadLiked());
-  }, []);
-  //runs when the form is submitted with the button or enter key
+    //still checking who's logged in so wait
+    if (user === undefined) return;
+    getLiked(user?.id ?? null)
+      .then(setLiked)
+      .catch((err) => console.error(err));
+  }, [user]);
   function handleSearch(e: React.FormEvent) {
-    //stops the page from reloading which is what forms do by default
     e.preventDefault();
-    //ignores empty searches
     if (input.trim() === "") return;
     setQuery(input.trim());
   }
   //saves the current song then moves to the next one
   function handleLike() {
     const song = songs[index];
-    //stops here if there's no song left to like
     if (!song) return;
     if (!liked.some((s) => s.id === song.id)) {
-      const updated = [...liked, song];
-      setLiked(updated);
-      //also saves it to the browser so it survives refreshes
-      saveLiked(updated);
+      //updates the screen right away instead of waiting on the database
+      setLiked([...liked, song]);
+      addLike(user?.id ?? null, song).catch((err) => {
+        console.error(err);
+        //saving failed so take it back off the list
+        setLiked((current) => current.filter((s) => s.id !== song.id));
+      });
     }
     setIndex(index + 1);
   }
-  //just moves on without saving
   function handleSkip() {
     setIndex(index + 1);
   }
-  const currentSong = songs[index];
-
   //lets the arrow keys skip and like
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      //ignores arrow keys while typing in the search box
       if (e.target instanceof HTMLInputElement) return;
-      //nothing to like or skip if we ran out of songs
       if (!songs[index]) return;
       if (e.key === "ArrowLeft") handleSkip();
       if (e.key === "ArrowRight") handleLike();
     }
     window.addEventListener("keydown", handleKey);
-    //removes the old listener
     return () => window.removeEventListener("keydown", handleKey);
-  }, [index, songs, liked]);
-
+  }, [index, songs, liked, user]);
+  const currentSong = songs[index];
   return (
     <main>
       <h1>swune</h1>
-      {/*shows who's logged in or a link to log in*/}
-      {user ? (
+      {/*shows who's logged in, or a log in link once we know they're a guest*/}
+      {user && (
         <p>
           Logged in as {user.email}{" "}
           <button onClick={() => supabase.auth.signOut()}>Log out</button>
         </p>
-      ) : (
-        <Link href="/login">Log in</Link>
       )}
+      {user === null && <Link href="/login">Log in to save your likes</Link>}
       <form onSubmit={handleSearch}>
         <input
           value={input}
@@ -108,23 +98,21 @@ export default function Home() {
       </form>
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
-      {!loading && !error && songs.length === 0 && <p>No songs</p>}
+      {!loading && !error && songs.length === 0 && <p>No songs found</p>}
       {!loading && !error && currentSong && (
         <div>
-            <p>
-              Song {index + 1} of {songs.length}
-            </p>
-            {/*key makes react treat each song as a new card so the audio resets*/}
-            <SongCard key={currentSong.id} song={currentSong} />
-            <button onClick={handleSkip}>Skip</button>
-            <button onClick={handleLike}>Like</button>
-          </div>
-        )}
-        {/*ran out of songs from this search*/}
-        {!loading && !error && songs.length > 0 && !currentSong && (
-          <p>You've gone through all these songs, search another artist!</p>
-        )}
-        <Link href="/liked">Liked songs ({liked.length})</Link>
+          <p>
+            Song {index + 1} of {songs.length}
+          </p>
+          <SongCard key={currentSong.id} song={currentSong} />
+          <button onClick={handleSkip}>Skip</button>
+          <button onClick={handleLike}>Like</button>
+        </div>
+      )}
+      {!loading && !error && songs.length > 0 && !currentSong && (
+        <p>You've gone through all these songs, search another artist!</p>
+      )}
+      <Link href="/liked">Liked songs ({liked.length})</Link>
     </main>
   );
 }

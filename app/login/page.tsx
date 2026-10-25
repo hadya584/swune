@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { moveGuestLikesToAccount } from "@/lib/likes";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,15 +18,24 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     //picks sign up or log in depending on which mode we're in
-    const { error: authError } = isSignUp
+    const { data, error: authError } = isSignUp
       ? await supabase.auth.signUp({ email, password })
       : await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (authError) {
+      setLoading(false);
       setError(authError.message);
       return;
     }
-    //it worked so send them back to discovering
+    //brings over anything they liked before logging in
+    if (data.user) {
+      try {
+        await moveGuestLikesToAccount(data.user.id);
+      } catch (err) {
+        //not a big deal if this fails, they're still logged in
+        console.error(err);
+      }
+    }
+    setLoading(false);
     router.push("/");
   }
   return (
