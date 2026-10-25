@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { moveGuestLikesToAccount } from "@/lib/likes";
+import { getPreferences } from "@/lib/preferences";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    //picks sign up or log in depending on which mode we're in
     const { data, error: authError } = isSignUp
       ? await supabase.auth.signUp({ email, password })
       : await supabase.auth.signInWithPassword({ email, password });
@@ -26,17 +26,24 @@ export default function LoginPage() {
       setError(authError.message);
       return;
     }
-    //brings over anything they liked before logging in
+    //where to go after logging in, home by default
+    let nextPage = "/";
     if (data.user) {
       try {
         await moveGuestLikesToAccount(data.user.id);
       } catch (err) {
-        //not a big deal if this fails, they're still logged in
+        console.error(err);
+      }
+      //anyone who hasn't answered the questions yet gets sent there first
+      try {
+        const prefs = await getPreferences(data.user.id);
+        if (!prefs) nextPage = "/onboarding";
+      } catch (err) {
         console.error(err);
       }
     }
     setLoading(false);
-    router.push("/");
+    router.push(nextPage);
   }
   return (
     <main>
