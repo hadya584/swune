@@ -7,3 +7,8 @@ export type Song = {
     coverUrl: string;
     previewUrl: string;
 };
+export type Artist = {
+    id: number;
+    name: string;
+    pictureUrl: string;
+};
