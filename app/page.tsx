@@ -14,13 +14,13 @@ import Player from "@/components/player";
 import ActionButton from "@/components/actionButton";
 import { HeartIcon, XIcon, ReplayIcon, OpenIcon, SearchIcon } from "@/components/icons";
 import MarqueeTitle from "@/components/marqueeTitle";
+import Header from "@/components/header";
 
 export default function Home() {
   const user = useUser();
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [input, setInput] = useState("");
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const [liked, setLiked] = useState<Song[]>([]);
@@ -39,9 +39,16 @@ export default function Home() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        //songs only by that exact artist, most popular first
+        let res = await fetch(`/api/artist-songs?name=${encodeURIComponent(query)}`);
         if (!res.ok) throw new Error("request failed");
-        const data: Song[] = await res.json();
+        let data: Song[] = await res.json();
+        //couldn't find that artist, so fall back to a normal search
+        if (data.length === 0) {
+          res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+          if (!res.ok) throw new Error("request failed");
+          data = await res.json();
+        }
         setSongs(data);
         setIndex(0);
       } catch {
@@ -83,14 +90,7 @@ export default function Home() {
       .then(setRelated)
       .catch(() => setRelated([]));
   }, [artistId]);
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (input.trim() === "") return;
-    setQuery(input.trim());
-    //clears and closes the search box after searching
-    setInput("");
-    setShowSearch(false);
-  }
+
   //saves the current song then moves to the next one
   function handleLike() {
     const song = songs[index];
@@ -138,46 +138,7 @@ export default function Home() {
     <main className="flex h-dvh flex-col overflow-hidden">
       {/*the real audio player, hidden since we built our own controls*/}
       <audio ref={audio.audioRef} src={currentSong?.previewUrl} autoPlay />
-      <header className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3.5 sm:px-8 sm:py-4">
-        <Link href="/" className="font-display text-3xl tracking-wide text-accent">
-          SWUNE
-        </Link>
-        <nav className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.15em] text-muted sm:gap-6 sm:tracking-[0.2em]">
-          {/*search box only shows up after clicking the icon*/}
-          {showSearch && (
-            <form onSubmit={handleSearch}>
-              <input
-                autoFocus
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Search an artist"
-                className="w-32 rounded-card border border-line bg-surface px-3 py-1.5 text-xs normal-case tracking-normal text-cream placeholder:text-muted focus:border-accent focus:outline-none sm:w-48"
-              />
-            </form>
-          )}
-          <button onClick={() => setShowSearch(!showSearch)} aria-label="Search" className="hover:text-cream">
-            <SearchIcon />
-          </button>
-          <Link href="/liked" className="hover:text-cream">
-            Liked
-          </Link>
-          {user && (
-            <Link href="/onboarding" className="hidden hover:text-cream sm:inline">
-              Preferences
-            </Link>
-          )}
-          {user && (
-            <button onClick={() => supabase.auth.signOut()} className="uppercase hover:text-cream">
-              Log out
-            </button>
-          )}
-          {user === null && (
-            <Link href="/login" className="text-accent hover:text-cream">
-              Log in
-            </Link>
-          )}
-        </nav>
-      </header>
+      <Header onSearch={setQuery} />
       <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[1.6vh] px-4 py-[1.6vh]">
         {loading && <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted">Loading...</p>}
         {error && <p className="text-accent">{error}</p>}

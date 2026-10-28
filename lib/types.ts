@@ -11,4 +11,5 @@ export type Artist = {
     id: number;
     name: string;
     pictureUrl: string;
+    fans?: number;
 };
