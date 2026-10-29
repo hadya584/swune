@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRelatedArtists } from "@/lib/deezer";
+import { getSimilarArtists } from "@/lib/related";
 
-//handles GET requests to /api/related?artistId=123
+//handles GET requests to /api/related?artistId=123&name=sia
 export async function GET(request: NextRequest) {
   const artistId = Number(request.nextUrl.searchParams.get("artistId"));
-  //missing or not a real number
+  //the name is only needed for the last.fm backup
+  const name = request.nextUrl.searchParams.get("name") ?? "";
   if (!artistId) {
     return NextResponse.json(
-      { error: "Add an artist id, like /api/related?artistId=860" },
+      { error: "Add an artist id, like /api/related?artistId=860&name=sia" },
       { status: 400 }
     );
   }
   try {
-    const artists = await getRelatedArtists(artistId);
+    const artists = await getSimilarArtists(artistId, name);
     return NextResponse.json(artists);
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Couldn't reach Deezer right now, try again" },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: "Couldn't find similar artists right now" }, { status: 502 });
   }
 }
