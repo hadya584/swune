@@ -20,9 +20,9 @@
 :root {
   --cover: clamp(170px, 38vh, 400px);
 }
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   :root {
-    --cover: clamp(160px, 32vh, 280px);
+    --cover: clamp(150px, 30vh, 280px);
   }
 }
 

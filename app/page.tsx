@@ -42,6 +42,7 @@ export default function Home() {
   const [direction, setDirection] = useState<SwipeDirection>("right");
   const currentSong = songs[index];
   const artistId = currentSong?.artistId;
+  const artistName = currentSong?.artist;
   const audio = useAudio(currentSong?.previewUrl);
 
   //stops us from loading more songs twice at the same time
@@ -198,14 +199,13 @@ export default function Home() {
     }
   }
 
-  //---- related artists ----
   //gets similar artists whenever the song is by a different artist
   useEffect(() => {
     if (!artistId) return;
     //if they skip to a new artist before this finishes, we ignore the old answer
     let cancelled = false;
     setRelated([]);
-    fetch(`/api/related?artistId=${artistId}`)
+    fetch(`/api/related?artistId=${artistId}&name=${encodeURIComponent(artistName ?? "")}`)
       .then((res) => (res.ok ? res.json() : []))
       .then((artists) => {
         if (!cancelled) setRelated(artists);
@@ -218,7 +218,6 @@ export default function Home() {
     };
   }, [artistId]);
 
-  //---- actions ----
   //saves the current song then moves to the next one
   function handleLike() {
     const song = songs[index];
@@ -266,7 +265,6 @@ export default function Home() {
     setQuery(favorites[Math.floor(Math.random() * favorites.length)]);
   }
 
-  //---- keyboard shortcuts ----
   //arrow keys like and skip, space plays and pauses
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -283,7 +281,6 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [index, songs, liked, skippedIds, user, audio, mode, favorites]);
 
-  //---- the page ----
   return (
     <main className="flex h-dvh flex-col overflow-hidden">
       {/*the real audio player, hidden since we built our own controls*/}
@@ -313,10 +310,10 @@ export default function Home() {
                 </button>
               )}
             </div>
-            {/*album in the middle with related artists on the right*/}
-            <div className="flex w-full flex-col items-center gap-[1.6vh] sm:w-auto sm:flex-row sm:gap-7">
+            {/*album in the middle with related artists on the right, or underneath on smaller screens*/}
+              <div className="flex w-full flex-col items-center gap-[1.6vh] lg:w-auto lg:flex-row lg:gap-7">
               {/*empty space the same width as the artists so the album stays centered*/}
-              <div className="hidden w-40 sm:block" />
+              <div className="hidden w-40 lg:block" />
               <AlbumStage song={currentSong} direction={direction} onSwipe={handleSwipe} />
               <RelatedArtists artists={related} onPick={handlePickArtist} />
             </div>

@@ -1,6 +1,7 @@
 import { Song, Artist } from "./types";
 import { findArtist, getArtistSongs, getRelatedArtists } from "./deezer";
 import { shuffle } from "./shuffle";
+import { getSimilarArtists } from "./related";
 
 export type DiscoveryStyle = "close" | "surprise";
 
@@ -18,11 +19,11 @@ export async function buildQueue(seedName: string, style: DiscoveryStyle): Promi
     //a few of the seed artist's own songs, shuffled so it's not always their biggest hit first
     const seedSongs = shuffle(await getArtistSongs(seed.id)).slice(0, mix.seedSongs);
     //similar artists picked at random from a bigger list so it changes every time
-    const related = shuffle(await getRelatedArtists(seed.id, 15));
+    const related = shuffle(await getSimilarArtists(seed.id, seed.name, 15));
     let picked: Artist[] = related.slice(0, mix.relatedArtists);
     //surprise mode also jumps one step further, to artists similar to the similar ones
     if (mix.secondHop > 0 && picked.length > 0) {
-        const hop = shuffle(await getRelatedArtists(picked[0].id, 15));
+        const hop = shuffle(await getSimilarArtists(picked[0].id, picked[0].name, 15));
         const extra = hop.filter((a) => a.id !== seed.id && !picked.some((p) => p.id === a.id));
         picked = [...picked, ...extra.slice(0, mix.secondHop)];
     }
