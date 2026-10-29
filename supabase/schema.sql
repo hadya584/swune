@@ -42,3 +42,19 @@ create policy "add own preferences" on preferences
   for insert to authenticated with check ((select auth.uid()) = user_id);
 create policy "update own preferences" on preferences
   for update to authenticated using ((select auth.uid()) = user_id);
+
+-- songs a user skipped, so we never show them again
+create table skipped_songs (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  song_id bigint not null,
+  skipped_at timestamptz not null default now(),
+  -- one row per user per song, which also blocks duplicates
+  primary key (user_id, song_id)
+);
+
+alter table skipped_songs enable row level security;
+
+create policy "read own skips" on skipped_songs
+  for select to authenticated using ((select auth.uid()) = user_id);
+create policy "add own skips" on skipped_songs
+  for insert to authenticated with check ((select auth.uid()) = user_id);
