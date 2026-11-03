@@ -318,7 +318,7 @@ export default function Home() {
               <RelatedArtists artists={related} onPick={handlePickArtist} />
             </div>
             <MarqueeTitle text={currentSong.title} />
-            <p className="-mt-[1vh] text-center">
+            <p className="text-center">
               {currentSong.artist} ·{" "}
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
                 {currentSong.album}

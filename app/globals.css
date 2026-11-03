@@ -26,6 +26,13 @@
   }
 }
 
+/*phones are short, so the album gets a bit smaller to leave room for everything else*/
+@media (max-width: 640px) {
+  :root {
+    --cover: clamp(140px, 27vh, 250px);
+  }
+}
+
 /*slow sideways scroll for song titles that are too long to fit*/
 @theme {
   --animate-marquee: marquee 12s linear infinite;
@@ -34,6 +41,7 @@
     to { transform: translateX(-50%); }
   }
 }
+
 
 body {
   background: var(--color-background);
