@@ -331,7 +331,7 @@ export default function Home() {
               onToggle={audio.toggle}
               onSeek={audio.seek}
             />
-            <div className="flex items-center gap-5 sm:gap-8">
+            <div className="flex items-center gap-4 sm:gap-8">
               <ActionButton label="Replay" variant="small" onClick={audio.replay}>
                 <ReplayIcon />
               </ActionButton>

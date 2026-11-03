@@ -7,9 +7,9 @@ type ActionButtonProps = {
   };
   //the look for each kind of round button, colors change on hover but nothing moves
   const styles = {
-    small: "size-11 border-[1.5px] border-line text-muted hover:border-cream hover:text-cream",
-    skip: "size-[62px] border-[1.5px] border-line bg-surface/80 text-cream hover:border-cream",
-    like: "size-[78px] bg-accent text-accent-ink hover:bg-accent-hover",
+    small: "size-9 border-[1.5px] border-line text-muted hover:border-cream hover:text-cream sm:size-11",
+    skip: "size-[50px] border-[1.5px] border-line bg-surface/80 text-cream hover:border-cream sm:size-[62px]",
+    like: "size-[62px] bg-accent text-accent-ink hover:bg-accent-hover sm:size-[78px]",
   };
   //a round button with a little label under it
   export default function ActionButton({ label, variant, onClick, href, children }: ActionButtonProps) {
