@@ -13,9 +13,18 @@ const spaceMono = Space_Mono({
   variable: "--font-space-mono",
 });
 
+
 export const metadata: Metadata = {
+  //your live site, so link previews can find the image
+  metadataBase: new URL("https://swune.vercel.app"),
   title: "Swune",
   description: "Swipe. Tune. Swoon. Discover new music by swiping through song previews.",
+  //what shows up when the link is shared on linkedin, imessage, slack, and so on
+  openGraph: {
+    title: "Swune: Music Discovery",
+    description: "A music discovery app that learns your taste with every swipe.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
