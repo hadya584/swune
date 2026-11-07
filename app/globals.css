@@ -18,7 +18,7 @@
 
 /*album cover size, shrinks with the screen height so the page never scrolls*/
 :root {
-  --cover: clamp(170px, 38vh, 400px);
+  --cover: clamp(170px, 34vh, 370px);
 }
 @media (max-width: 1023px) {
   :root {

@@ -286,7 +286,7 @@ export default function Home() {
       {/*the real audio player, hidden since we built our own controls*/}
       <audio ref={audio.audioRef} src={currentSong?.previewUrl} autoPlay />
       <Header onSearch={startRadio} />
-      <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[1.6vh] px-4 py-[1.6vh]">
+      <section className="flex min-h-0 flex-1 flex-col items-center justify-center-safe gap-[1.6vh] overflow-y-auto px-4 pb-[1.6vh] pt-[3vh]">
         {loading && <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted">Loading...</p>}
         {error && <p className="text-accent">{error}</p>}
         {!loading && !error && songs.length === 0 && <p className="text-muted">No songs found</p>}
@@ -317,13 +317,16 @@ export default function Home() {
               <AlbumStage song={currentSong} direction={direction} onSwipe={handleSwipe} />
               <RelatedArtists artists={related} onPick={handlePickArtist} />
             </div>
-            <MarqueeTitle text={currentSong.title} />
-            <p className="text-center">
-              {currentSong.artist} ·{" "}
-              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-                {currentSong.album}
-              </span>
-            </p>
+              {/*title and artist grouped together so they sit close instead of getting the full gap*/}
+              <div className="flex w-full flex-col items-center">
+                <MarqueeTitle text={currentSong.title} />
+                <p className="text-center">
+                  {currentSong.artist} ·{" "}
+                  <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+                    {currentSong.album}
+                  </span>
+                </p>
+            </div>
             <Player
               playing={audio.playing}
               currentTime={audio.currentTime}
