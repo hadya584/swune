@@ -22,7 +22,7 @@ export default function MarqueeTitle({ text }: { text: string }) {
   }, [text]);
   //smaller on phones, with extra line height so the tops and bottoms of letters don't get clipped
   const textClass =
-    "shrink-0 whitespace-nowrap py-1 font-display text-[clamp(26px,5.6vh,54px)] uppercase leading-[1.15] tracking-wide";
+    "shrink-0 whitespace-nowrap py-0.5 font-display text-[clamp(26px,5vh,50px)] uppercase leading-[1.15] tracking-wide";
   return (
     //shrink-0 stops the page from squishing the title when space is tight
     <h1

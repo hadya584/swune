@@ -55,7 +55,7 @@ type AlbumStageProps = SwipeCardProps;
 //the framed area with a blurry copy of the album art behind the swipeable cover
 export default function AlbumStage({ song, direction, onSwipe }: AlbumStageProps) {
   return (
-    <div className="relative h-[calc(var(--cover)+48px)] w-[calc(var(--cover)+150px)] max-w-full shrink-0 overflow-hidden rounded-[10px] border border-line">
+    <div className="relative h-[calc(var(--cover)+32px)] w-[calc(var(--cover)+150px)] max-w-full shrink-0 overflow-hidden rounded-[10px] border border-line">
       {/*blurry background, the key makes it fade in again for each new song*/}
       <motion.img
         key={song.coverUrl}
